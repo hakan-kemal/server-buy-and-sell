@@ -1,81 +1,63 @@
-const { Router } = require("express");
-const Ad = require("./model");
-// const auth = require("../auth/middleware");
+const { Router } = require('express');
+const Ad = require('./model');
 
 const router = new Router();
 
-router.post(
-  "/advertisements",
-  /*auth,*/ (request, response, next) => {
-    console.log(
-      "Welcome from advertisement router.js; message created by router.POST"
-    );
-    const advertisement = {
-      title: request.body.title,
-      description: request.body.description,
-      url: request.body.url,
-      price: request.body.price,
-      email: request.body.email,
-      phone: request.body.phone
-    };
-    Ad.create(advertisement)
-      .then(advertisement => {
-        response.status(200).send(advertisement);
-      })
-      .catch(next);
-  }
-);
-
-router.get("/advertisements", (request, response, next) => {
-  console.log(
-    "Welcome from advertisement router.js; message created by router.GET"
-  );
+router.get('/advertisements', (_req, res, next) => {
   Ad.findAll()
-    .then(advertisement => {
-      response.status(200).send(advertisement);
+    .then(ads => {
+      res.status(200).send(ads);
     })
-    .catch(next);
+    .catch(err => next(err));
 });
 
-router.get("/advertisements/:advertisementId", (request, response, next) => {
-  Ad.findByPk(request.params.advertisementId)
-    .then(advertisement => {
-      if (advertisement) {
-        response.status(200).send(advertisement);
+router.post('/advertisements', (req, res, next) => {
+  console.log('Welcome from advertisement router.js; message created by router.POST');
+  Ad.create(req.body)
+    .then(ad => {
+      res.status(200).send(ad);
+    })
+    .catch(err => next(err));
+});
+
+router.get('/advertisements/:id', (req, res, next) => {
+  const { id } = req.params;
+  Ad.findByPk(id)
+    .then(ad => {
+      if (ad) {
+        res.status(200).send(ad);
       } else {
-        response.status(404).end();
+        res.status(404).end();
       }
     })
-    .catch(next);
+    .catch(err => next(err));
 });
 
-router.put("/advertisements/:advertisementId", (request, response, next) => {
-  Ad.findByPk(request.params.advertisementId)
-    .then(advertisement => {
-      if (advertisement) {
-        advertisement
-          .update(request.body)
-          .then(advertisement => response.status(200).send(advertisement));
+router.put('/advertisements/:id', (req, res, next) => {
+  const { id } = req.params;
+  Ad.findByPk(id)
+    .then(ad => {
+      if (ad) {
+        ad.update(req.body).then(ad => res.status(200).send(ad));
       } else {
-        response.status(404).end();
+        res.status(404).end();
       }
     })
-    .catch(next);
+    .catch(err => next(err));
 });
 
-router.delete("/advertisements/:advertisementId", (request, response, next) => {
-  Ad.destroy({ where: { id: request.params.advertisementId } })
+router.delete('/advertisements/:id', (req, res, next) => {
+  const { id } = req.params;
+  Ad.destroy({ where: { id: id } })
     .then(deleted => {
-      const message = { message: "An advertisement was deleted!" };
+      const message = { message: 'Ad deleted!' };
       if (deleted) {
-        return response.json(message).status(204);
+        return res.json(message).status(204);
       } else {
-        return response.status(404).end();
+        return res.status(404).end();
       }
     })
-    .catch(next);
+    .catch(err => next(err));
 });
-
-console.log("Connected to Ad-router.js");
 
 module.exports = router;
